@@ -5,6 +5,7 @@ class Barrier{
   Barrier(int hole){
     wallTop = new Wall(0, hole);
     wallBottom = new Wall(hole+gap, height-hole-gap);
+    wallBottom.bottomPipe = true;
   }
   
   //---------------------------------------------------

@@ -1,13 +1,30 @@
+ArrayList<Ground> grounds = new ArrayList<Ground>();
 ArrayList<Barrier> barriers = new ArrayList<Barrier>();
 
 int frameSpeed = 60;
 int highScore = 0;
 int speed = 3;
+int groundHeight = 69;
 int gap = 200;
 int minDistForHole = 125;
 int barrierTimer = 0;
 int minTimeBetweenBarriers = 100;
 int randomAddition = 0;
+
+// Images
+PImage backgroundImg;
+PImage groundImg;
+PImage wallImg;
+PImage wallTopImg;
+PImage wallBottomImg;
+PImage playerImg;
+PImage playerUpImg;
+PImage playerDownImg;
+PImage playerFlapImg;
+PImage playerFlapUpImg;
+PImage playerFlapDownImg;
+PImage playerFallImg;
+PImage playerFallUpImg;
 
 Player player;
 
@@ -15,6 +32,26 @@ Player player;
 void setup(){
   frameRate(60);
   size(800, 800);
+
+  // Load Images
+  backgroundImg = loadImage("background.png");
+  groundImg = loadImage("ground.png");
+  wallImg = loadImage("wall.png");
+  wallTopImg = loadImage("wallTop.png");
+  wallBottomImg = loadImage("wallBottom.png");
+  playerImg = loadImage("player.png");
+  playerUpImg = loadImage("playerUp.png");
+  playerDownImg = loadImage("playerDown.png");
+  playerFlapImg = loadImage("playerFlap.png");
+  playerFlapUpImg = loadImage("playerFlapUp.png");
+  playerFlapDownImg = loadImage("playerFlapDown.png");
+  playerFallImg = loadImage("playerFall.png");
+  playerFallUpImg = loadImage("playerFallUp.png");
+  
+  Ground initGround = new Ground(0);
+  grounds.add(initGround);
+  Ground initGround2 = new Ground(808);
+  grounds.add(initGround2);
 
   player = new Player();
 }
@@ -40,10 +77,11 @@ void draw(){
 }
 
 void drawToScreen(){
-  background(173, 216, 230);
+  background(backgroundImg);
   stroke(0);
   strokeWeight(2);
   
+  updateGrounds();
   updateBarriers();
 }
 
@@ -65,6 +103,35 @@ void keyPressed(){
     player = new Player();
     resetBarriers();
     break;
+  }
+}
+
+//--------------------------------------------------------
+void updateGrounds(){
+  moveGrounds(); // Move everything
+  showGrounds(); // Show everything
+}
+
+void moveGrounds() {
+  for(int i = 0; i< grounds.size(); i++){
+    grounds.get(i).move(speed);
+    if(grounds.get(i).pos.x < 0-grounds.get(i).recWidth+1){ 
+      grounds.remove(i);
+      i--;
+      
+      addGround();
+    }
+  }
+}
+
+void addGround(){
+  Ground newGround = new Ground(808);
+  grounds.add(newGround);
+}
+
+void showGrounds(){
+  for(int i = 0; i< grounds.size(); i++){
+    grounds.get(i).show();
   }
 }
 

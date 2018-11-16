@@ -2,6 +2,7 @@ class Wall{
   PVector pos;
   int recHeight;
   int recWidth = 86;
+  boolean bottomPipe = false;
 
   Wall(int y, int sizeY){
     pos = new PVector(width+recWidth, y);
@@ -13,8 +14,13 @@ class Wall{
  
   //---------------------------------------------------
   void show(){
-    fill(0, 64, 0);
-    rect(pos.x, pos.y, recWidth, recHeight);
+    if(bottomPipe){
+      image(wallImg, pos.x, pos.y, recWidth, recHeight-groundHeight);
+      image(wallTopImg, pos.x, pos.y);
+    }else{
+      image(wallImg, pos.x, pos.y, recWidth, recHeight);
+      image(wallBottomImg, pos.x, pos.y+recHeight-39);
+    }
   }
   
   //---------------------------------------------------
