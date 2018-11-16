@@ -15,7 +15,7 @@ int randomAddition = 0;
 int gen = 0;
 int popSize = 500;
 int barrierHistoryTracker = 0;
-int highFitness = 0;
+float highFitness = 0;
 boolean isPlayer = false;
 boolean hideAll = false;
 
@@ -36,6 +36,7 @@ PImage playerFallUpImg;
 
 Population players;
 Player player;
+Goal goal;
 
 //--------------------------------------------------------
 void setup(){
@@ -61,6 +62,7 @@ void setup(){
   grounds.add(initGround);
   Ground initGround2 = new Ground(808);
   grounds.add(initGround2);
+  goal = new Goal(-15, -15);
 
   if(isPlayer){
     player = new Player();
@@ -97,11 +99,24 @@ void draw(){
       players.calcFitness();
       players.naturalSelection();
       players.mutate();
+      
+      /// Test: Copies initial part of best persons brain to everyone else in generation - sort of 'saving progress'
+      players.copyInitBrain(players.players[0]);
+      ///
+      
+      goal.update(-15, -15);
     }else{
       drawToScreen();
       players.update();
       if(!hideAll){
         players.show();
+      }
+      if(barriers.size() > 0){
+        goal.update(barriers.get(0).wallTop.pos.x + barriers.get(0).wallTop.recWidth, barriers.get(0).wallBottom.pos.y - gap/2);
+        /*// Marks the goal with a green circle
+        if(!hideAll){
+          goal.show();
+        }*/
       }
     }
     

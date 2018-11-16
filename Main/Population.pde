@@ -1,10 +1,11 @@
 class Population{
   Player[] players;
   float fitnessSum = 0;
+  float bestFitness = 0;
   int gen = 1;
   int bestPerson = 0;
-  int bestFitness = 0;
   int bestScore = 0;
+  int mutateStart = 0;
   
   Population(int size){
     players = new Player[size];
@@ -77,6 +78,8 @@ class Population{
         players[i].score++;
       }
     }
+    
+    mutateStart = players[0].brain.step - 12;
   }
   
   //---------------------------------------------------
@@ -120,7 +123,7 @@ class Population{
   }
   
   void saveBestPerson(){
-    int max = 0;
+    float max = 0;
     int maxIndex = 0;
     
     for(int i = 0; i < players.length; i++){
@@ -138,10 +141,18 @@ class Population{
     bestPerson = maxIndex;
   }
   
+  void copyInitBrain(Player parent){
+    for(int i = 0; i< players.length; i++){
+      for(int j = 0; j < mutateStart; j++){
+        players[i].brain.moves[j] = parent.brain.moves[j];
+      }
+    }
+  }
+  
   //---------------------------------------------------
   void mutate(){
     for(int i = 1; i < players.length; i++){
-      players[i].brain.mutate();
+      players[i].brain.mutate(mutateStart);
     }
   }
 }

@@ -25,9 +25,9 @@ class Brain{
   }
   
   //---------------------------------------------------
-  void mutate(){
+  void mutate(int start){
     float mutationRate = 0.1;
-    for(int i = 0; i < moves.length; i++){
+    for(int i = start; i < moves.length; i++){
       float rand = random(1);
       if(rand < mutationRate){
         // Overwrite memory

@@ -2,7 +2,7 @@ class Player{
   PVector pos;
   PVector vel;
   float gravity = 0.2;
-  int fitness = 0;
+  float fitness = 0;
   int imgWidth = 47;
   int imgHeight = 34;
   int moveCount = 0;
@@ -24,7 +24,6 @@ class Player{
   void update(){
     if(!dead){
       move();
-      fitness++;
       
       if(pos.y < (imgHeight/2) || pos.y > height-(imgHeight/2)-groundHeight){ // End of Screen
         dead = true;
@@ -111,9 +110,9 @@ class Player{
   
   //---------------------------------------------------
   void calcFitness(){
-    fitness /= 10;
     if(score != 0){
-      fitness += score*1000;
+      float distanceToGoal = dist(pos.x, pos.y, goal.pos.x, goal.pos.y);
+      fitness = 1.0/(distanceToGoal * distanceToGoal) + score;
     }
   }
   
