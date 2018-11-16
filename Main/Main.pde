@@ -1,5 +1,7 @@
 ArrayList<Ground> grounds = new ArrayList<Ground>();
 ArrayList<Barrier> barriers = new ArrayList<Barrier>();
+ArrayList<Integer> barrierHistory = new ArrayList<Integer>();
+ArrayList<Integer> randomAdditionHistory = new ArrayList<Integer>();
 
 int frameSpeed = 60;
 int highScore = 0;
@@ -10,6 +12,12 @@ int minDistForHole = 125;
 int barrierTimer = 0;
 int minTimeBetweenBarriers = 100;
 int randomAddition = 0;
+int gen = 0;
+int popSize = 500;
+int barrierHistoryTracker = 0;
+int highFitness = 0;
+boolean isPlayer = false;
+boolean hideAll = false;
 
 // Images
 PImage backgroundImg;
@@ -26,6 +34,7 @@ PImage playerFlapDownImg;
 PImage playerFallImg;
 PImage playerFallUpImg;
 
+Population players;
 Player player;
 
 //--------------------------------------------------------
@@ -53,26 +62,55 @@ void setup(){
   Ground initGround2 = new Ground(808);
   grounds.add(initGround2);
 
-  player = new Player();
+  if(isPlayer){
+    player = new Player();
+  }else{
+    players = new Population(popSize);
+  }
 }
 
 //--------------------------------------------------------
 void draw(){
-  if(!player.dead){
-    PFont f = createFont("Arial", 16, true);
-    
-    drawToScreen();
-    player.update();
-          
-    textFont(f, 40);
-    fill(255, 255, 255);
-    text(player.score, width/2-40, 60);
-    text("Best: "+highScore, 10, height-14);
+  if(isPlayer){
+    if(!player.dead){
+      PFont f = createFont("Arial", 16, true);
+      
+      drawToScreen();
+      player.update();
+            
+      textFont(f, 40);
+      fill(255, 255, 255);
+      text(player.score, width/2-40, 60);
+      text("Best: "+highScore, 10, height-14);
+    }else{
+      PFont f = createFont("Arial", 16, true);
+      textFont(f, 120);
+      fill(255, 0, 0);
+      text("Game Over", 80, height/2);
+    }
   }else{
     PFont f = createFont("Arial", 16, true);
-    textFont(f, 120);
-    fill(255, 0, 0);
-    text("Game Over", 80, height/2);
+    
+    if(players.allDead()){
+      resetBarriers();
+      // Genetic Algorithm
+      players.calcFitness();
+      players.naturalSelection();
+      players.mutate();
+    }else{
+      drawToScreen();
+      players.update();
+      if(!hideAll){
+        players.show();
+      }
+    }
+    
+    textFont(f, 40);
+    fill(100, 100, 100);
+    text("Gen: "+players.gen, 10, height-15);
+    text("BestScore: "+players.bestScore, 200, height-15);
+    text("BestFit: "+players.bestFitness, 500, height-15);
+    text(players.areAlive(), width/2-40, 60);
   }
 }
 
@@ -89,19 +127,26 @@ void drawToScreen(){
 void keyPressed(){
   switch(key){
   case 'j': // Jump
-    player.jump();
-    /* // Limit jump so you can't jump again until you're about to start falling
-    if(player.vel.y > -1){
+    if(isPlayer){
       player.jump();
-    }*/
+      /* // Limit jump so you can't jump again until you're about to start falling
+      if(player.vel.y > -1){
+        player.jump();
+      }*/
+    }
     break;
   case 'r': // Reset
-    if(player.score > highScore){
-      highScore = player.score;
+    if(isPlayer){
+      if(player.score > highScore){
+        highScore = player.score;
+      }
+      
+      player = new Player();
+      resetBarriers();
     }
-    
-    player = new Player();
-    resetBarriers();
+    break;
+  case 'h': // Hide all in order to speed up computation
+    hideAll = !hideAll;
     break;
   }
 }
@@ -109,7 +154,9 @@ void keyPressed(){
 //--------------------------------------------------------
 void updateGrounds(){
   moveGrounds(); // Move everything
-  showGrounds(); // Show everything
+  if(!hideAll){ // Show everything
+    showGrounds();
+  }
 }
 
 void moveGrounds() {
@@ -138,7 +185,9 @@ void showGrounds(){
 //--------------------------------------------------------
 void updateBarriers(){
   barrierTimer++;
-  speed += 0.02;
+  if(isPlayer){
+    speed += 0.02;
+  }
   
   // Check if waited long enough to add a new barrier
   if(barrierTimer > minTimeBetweenBarriers + randomAddition){
@@ -146,7 +195,9 @@ void updateBarriers(){
   }
 
   moveBarriers(); // Move everything
-  showBarriers(); // Show everything
+  if(!hideAll){ // Show everything
+    showBarriers();
+  }
 }
 
 void moveBarriers() {
@@ -156,7 +207,11 @@ void moveBarriers() {
       barriers.remove(i);
       i--;
       
-      player.score++;
+      if(isPlayer){
+        player.score++;
+      }else{
+        players.addScore();
+      }
     }
   }
 }
@@ -164,11 +219,29 @@ void moveBarriers() {
 void addBarrier(){
   int hole = floor(random(minDistForHole, height-minDistForHole-gap));
   
-  Barrier newBarrier = new Barrier(hole);
-  barriers.add(newBarrier);
-
-  randomAddition = floor(random(30));
-  barrierTimer = 0;
+  if(isPlayer){
+    Barrier newBarrier = new Barrier(hole);
+    barriers.add(newBarrier);
+  
+    randomAddition = floor(random(30));
+    barrierTimer = 0;
+  }else{
+    if(barrierHistoryTracker < barrierHistory.size()){
+      Barrier newBarrier = new Barrier(barrierHistory.get(barrierHistoryTracker));
+      barriers.add(newBarrier);
+    
+      randomAddition = randomAdditionHistory.get(barrierHistoryTracker);
+      barrierHistoryTracker++;
+    }else{
+      Barrier newBarrier = new Barrier(hole);
+      barriers.add(newBarrier);
+      barrierHistory.add(hole);
+    
+      randomAddition = floor(random(30));
+      randomAdditionHistory.add(randomAddition);
+    }
+    barrierTimer = 0;
+  }
 }
 
 void showBarriers(){
@@ -182,5 +255,6 @@ void resetBarriers(){
   barriers = new ArrayList<Barrier>();
   barrierTimer = 0;
   randomAddition = 0;
+  barrierHistoryTracker = 0;
   speed = 3;
 }

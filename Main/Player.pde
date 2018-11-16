@@ -2,14 +2,20 @@ class Player{
   PVector pos;
   PVector vel;
   float gravity = 0.2;
+  int fitness = 0;
   int imgWidth = 47;
   int imgHeight = 34;
   int moveCount = 0;
   int moveInterval = 12;
   int score = 0;
   boolean dead = false;
+  boolean isBest = false;
+  
+  Brain brain;
   
   Player(){
+    brain = new Brain(4000);
+    
     pos = new PVector(20+(imgWidth/2), 200);
     vel = new PVector(0,0);
   }
@@ -18,6 +24,7 @@ class Player{
   void update(){
     if(!dead){
       move();
+      fitness++;
       
       if(pos.y < (imgHeight/2) || pos.y > height-(imgHeight/2)-groundHeight){ // End of Screen
         dead = true;
@@ -29,7 +36,9 @@ class Player{
         }
       }
       
-      show();
+      if(!hideAll){
+        show();
+      }
     }
   }
   
@@ -71,9 +80,26 @@ class Player{
     if(moveCount == moveInterval*4){
       moveCount = 0;
     }
+    
+    /*// Marks the best in the generation with a dot
+    if(isBest){
+      fill(255, 0, 0);
+      ellipse(pos.x, pos.y, imgWidth/4, imgHeight/4);
+    }*/
   }
   
   void move(){
+    if(!isPlayer){
+      if(brain.moves.length > brain.step){
+        if(brain.moves[brain.step] == 1){
+          jump();
+        }
+        brain.step++;
+      }else{
+        dead = true;
+      }
+    }
+    
     pos.y += vel.y;
     vel.y += gravity;
   }
@@ -82,4 +108,19 @@ class Player{
   void jump(){
     vel.y = -6.5;
   }
+  
+  //---------------------------------------------------
+  void calcFitness(){
+    fitness /= 10;
+    if(score != 0){
+      fitness += score*1000;
+    }
+  }
+  
+  //---------------------------------------------------
+  Player createChild(){
+    Player child = new Player();
+    child.brain = brain.clone();
+    return child;
+  }   
 }
